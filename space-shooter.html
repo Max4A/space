@@ -66,6 +66,8 @@
         let gameRunning = true;
         let player, bullets, enemies, particles;
         let keys = {};
+        let mouseX = canvas.width / 2;
+        let useMouseControl = false;
 
         // Класс игрока
         class Player {
@@ -89,17 +91,24 @@
             }
 
             update() {
-                if (keys['ArrowLeft'] && this.x > 0) {
-                    this.x -= this.speed;
-                }
-                if (keys['ArrowRight'] && this.x + this.width < canvas.width) {
-                    this.x += this.speed;
-                }
-                if (keys['ArrowUp'] && this.y > 0) {
-                    this.y -= this.speed;
-                }
-                if (keys['ArrowDown'] && this.y + this.height < canvas.height) {
-                    this.y += this.speed;
+                if (useMouseControl) {
+                    this.x = mouseX - this.width / 2;
+                    // Ограничение движения по горизонтали
+                    if (this.x < 0) this.x = 0;
+                    if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+                } else {
+                    if (keys['ArrowLeft'] && this.x > 0) {
+                        this.x -= this.speed;
+                    }
+                    if (keys['ArrowRight'] && this.x + this.width < canvas.width) {
+                        this.x += this.speed;
+                    }
+                    if (keys['ArrowUp'] && this.y > 0) {
+                        this.y -= this.speed;
+                    }
+                    if (keys['ArrowDown'] && this.y + this.height < canvas.height) {
+                        this.y += this.speed;
+                    }
                 }
             }
         }
@@ -191,10 +200,28 @@
             if (e.code === 'Space' && gameRunning) {
                 bullets.push(new Bullet(player.x + player.width / 2 - 2, player.y));
             }
+            // Отключаем управление мышкой при нажатии клавиш стрелок
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+                useMouseControl = false;
+            }
         });
 
         document.addEventListener('keyup', (e) => {
             keys[e.code] = false;
+        });
+
+        // Обработка движения мыши
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            useMouseControl = true;
+        });
+
+        // Обработка клика мыши для стрельбы
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0 && gameRunning) { // Левая кнопка мыши
+                bullets.push(new Bullet(player.x + player.width / 2 - 2, player.y));
+            }
         });
 
         // Проверка столкновений
